@@ -1,0 +1,86 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import AllApplications from '@/components/AllApplications';
+import { UserRole } from '@/types';
+import { hasAnyRole } from '@/lib/auth';
+
+export default function AllApplicationsPage() {
+    const router = useRouter();
+    const [loading, setLoading] = useState(true);
+    const [userRole, setUserRole] = useState<UserRole | null>(null);
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                router.push('/login');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('User data from API:', data);
+                    const userRole = data.data.user.role;
+                    console.log('User role:', userRole);
+                    setUserRole(userRole);
+
+                    // Check if user has permission to view all applications
+                    // Only L1, SUPERVISOR and ADMIN can access this page
+                    if (!hasAnyRole(userRole, [UserRole.L1, UserRole.SUPERVISOR, UserRole.ADMIN])) {
+                        console.log('Access denied for role:', userRole);
+                        router.push('/dashboard');
+                        return;
+                    }
+                    console.log('Access granted for role:', userRole);
+                } else {
+                    localStorage.removeItem('token');
+                    router.push('/login');
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                router.push('/login');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        checkAuth();
+    }, [router]);
+
+    if (loading) {
+        return (
+            <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '100vh'
+            }}>
+                <div>Đang tải...</div>
+            </div>
+        );
+    }
+
+    if (!userRole || !hasAnyRole(userRole, [UserRole.L1, UserRole.SUPERVISOR, UserRole.ADMIN])) {
+        return (
+            <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '100vh'
+            }}>
+                <div>Bạn không có quyền truy cập trang này</div>
+            </div>
+        );
+    }
+
+    return <AllApplications />;
+}
