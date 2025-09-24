@@ -45,6 +45,12 @@ export async function GET(request: NextRequest) {
             );
         }
 
+        // Parse query parameters
+        const { searchParams } = new URL(request.url);
+        const roleFilter = searchParams.get('role');
+        const unitIdFilter = searchParams.get('unit_id');
+        const searchQuery = searchParams.get('search');
+
         let query: any = {};
 
         // L2 can only see students and other L2s in their unit
@@ -65,6 +71,28 @@ export async function GET(request: NextRequest) {
                     }
                 ]
             };
+        }
+
+        // Apply filters for admins/supervisors/L1
+        if (canViewAllUsers) {
+            if (roleFilter) {
+                query.role = roleFilter;
+            }
+            if (unitIdFilter) {
+                query.unit_id = unitIdFilter;
+            }
+        }
+
+        // Apply search filter
+        if (searchQuery) {
+            query.$and = query.$and || [];
+            query.$and.push({
+                $or: [
+                    { full_name: { $regex: searchQuery, $options: 'i' } },
+                    { email: { $regex: searchQuery, $options: 'i' } },
+                    { username: { $regex: searchQuery, $options: 'i' } }
+                ]
+            });
         }
 
         // Get users based on permissions

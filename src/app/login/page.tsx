@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Form, Input, Button, Card, Alert, Typography, Layout, message } from 'antd';
+import { Form, Input, Button, Card, Alert, Typography, Layout } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import { useNotification } from '../../hooks/useNotification';
 
 const { Title } = Typography;
 const { Content } = Layout;
@@ -19,11 +20,12 @@ const LoginPage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const { login } = useAuth();
     const router = useRouter();
+    const { notification, contextHolder } = useNotification();
 
     const onFinish = async (values: LoginFormData) => {
         const loginMessageKey = 'login-loading';
-        message.loading({
-            content: '🔐 Đang xác thực thông tin đăng nhập...',
+        notification.info({
+            message: '🔐 Đang xác thực thông tin đăng nhập...',
             duration: 0,
             key: loginMessageKey
         });
@@ -33,18 +35,10 @@ const LoginPage: React.FC = () => {
             setError(null);
             await login(values.username, values.password);
 
-            message.destroy(loginMessageKey);
-            message.success({
-                content: (
-                    <div>
-                        <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
-                            🎉 Đăng nhập thành công!
-                        </div>
-                        <div style={{ fontSize: '12px', color: '#666' }}>
-                            Đang chuyển hướng đến trang quản lý...
-                        </div>
-                    </div>
-                ),
+            notification.destroy(loginMessageKey);
+            notification.success({
+                message: '🎉 Đăng nhập thành công!',
+                description: 'Đang chuyển hướng đến trang quản lý...',
                 duration: 3
             });
 
@@ -53,25 +47,18 @@ const LoginPage: React.FC = () => {
                 router.push('/dashboard');
             }, 1000);
         } catch (error) {
-            message.destroy(loginMessageKey);
+            notification.destroy(loginMessageKey);
             const errorMessage = (error as Error).message;
 
-            message.error({
-                content: (
-                    <div>
-                        <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
-                            ❌ Đăng nhập thất bại
-                        </div>
-                        <div style={{ fontSize: '12px', color: '#666' }}>
-                            {errorMessage.includes('connection') || errorMessage.includes('network')
-                                ? 'Lỗi kết nối. Vui lòng kiểm tra mạng và thử lại.'
-                                : errorMessage.includes('Invalid') || errorMessage.includes('incorrect')
-                                    ? 'Tên đăng nhập hoặc mật khẩu không đúng.'
-                                    : `Lỗi: ${errorMessage}`
-                            }
-                        </div>
-                    </div>
-                ),
+            const errorDescription = errorMessage.includes('connection') || errorMessage.includes('network')
+                ? 'Lỗi kết nối. Vui lòng kiểm tra mạng và thử lại.'
+                : errorMessage.includes('Invalid') || errorMessage.includes('incorrect')
+                    ? 'Tên đăng nhập hoặc mật khẩu không đúng.'
+                    : `Lỗi: ${errorMessage}`;
+
+            notification.error({
+                message: '❌ Đăng nhập thất bại',
+                description: errorDescription,
                 duration: 5
             });
             setError(errorMessage);
@@ -82,6 +69,7 @@ const LoginPage: React.FC = () => {
 
     return (
         <Layout style={{ minHeight: '100vh', backgroundColor: '#f0f2f5' }}>
+            {contextHolder}
             <Content style={{
                 display: 'flex',
                 justifyContent: 'center',
