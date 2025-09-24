@@ -14,6 +14,10 @@ interface Application {
         _id: string;
         username: string;
         email: string;
+        student_code?: string;
+        full_name?: string;
+        class_name?: string;
+        phone?: string;
     };
     unit_id: {
         _id: string;
@@ -400,9 +404,33 @@ const AllApplicationsPage: React.FC = () => {
     const columns = [
         {
             title: 'Mã sinh viên',
-            dataIndex: ['student_id', 'username'],
+            dataIndex: ['student_id', 'student_code'],
             key: 'student_code',
             width: 120,
+            render: (student_code: string, record: Application) => {
+                return student_code || record.student_id.username;
+            }
+        },
+        {
+            title: 'Họ tên',
+            dataIndex: ['student_id', 'full_name'],
+            key: 'full_name',
+            width: 200,
+            render: (full_name: string) => full_name || '-',
+        },
+        {
+            title: 'Lớp',
+            dataIndex: ['student_id', 'class_name'],
+            key: 'class_name',
+            width: 120,
+            render: (class_name: string) => class_name || '-',
+        },
+        {
+            title: 'Số điện thoại',
+            dataIndex: ['student_id', 'phone'],
+            key: 'phone',
+            width: 130,
+            render: (phone: string) => phone || '-',
         },
         {
             title: 'Email',
@@ -421,13 +449,6 @@ const AllApplicationsPage: React.FC = () => {
             dataIndex: 'position_title',
             key: 'position_title',
             width: 150,
-        },
-        {
-            title: 'Số giờ',
-            dataIndex: 'expected_total_hours',
-            key: 'expected_total_hours',
-            width: 80,
-            render: (hours: number) => `${hours}h`,
         },
         {
             title: 'Trạng thái',
@@ -479,7 +500,11 @@ const AllApplicationsPage: React.FC = () => {
                                 width: 800,
                                 content: (
                                     <div>
-                                        <p><strong>Sinh viên:</strong> {record.student_id.username} - {record.student_id.email}</p>
+                                        <p><strong>Mã sinh viên:</strong> {record.student_id.student_code || record.student_id.username}</p>
+                                        <p><strong>Họ tên:</strong> {record.student_id.full_name || '-'}</p>
+                                        <p><strong>Lớp:</strong> {record.student_id.class_name || '-'}</p>
+                                        <p><strong>Số điện thoại:</strong> {record.student_id.phone || '-'}</p>
+                                        <p><strong>Email:</strong> {record.student_id.email}</p>
                                         <p><strong>Đơn vị:</strong> {record.unit_id.name}</p>
                                         <p><strong>Vị trí:</strong> {record.position_title}</p>
                                         <p><strong>Mô tả:</strong> {record.description}</p>

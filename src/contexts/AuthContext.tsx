@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { User, UserRole } from '../types';
 
 interface AuthContextType {
@@ -26,6 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [user, setUser] = useState<User | null>(null);
     const [token, setToken] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    const router = useRouter();
 
     useEffect(() => {
         // Check for stored token on mount
@@ -51,19 +53,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (data.success) {
                     setUser(data.data.user);
                 } else {
-                    // Token is invalid
+                    // Token is invalid, clear it and redirect
                     localStorage.removeItem('token');
                     setToken(null);
+                    setUser(null);
+                    router.push('/');
                 }
             } else {
-                // Token is invalid
+                // Token is invalid, clear it and redirect
                 localStorage.removeItem('token');
                 setToken(null);
+                setUser(null);
+                router.push('/');
             }
         } catch (error) {
             console.error('Error fetching user:', error);
+            // Clear invalid token and redirect
             localStorage.removeItem('token');
             setToken(null);
+            setUser(null);
+            router.push('/');
         } finally {
             setLoading(false);
         }
@@ -125,6 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(null);
         setToken(null);
         localStorage.removeItem('token');
+        router.push('/');
     };
 
     const value = {

@@ -32,8 +32,8 @@ export async function GET(request: NextRequest) {
             );
         }
 
-        // Kiểm tra quyền truy cập - Chỉ L1, Admin và Giám sát được xem tất cả đăng ký
-        const allowedRoles = [UserRole.L1, UserRole.SUPERVISOR, UserRole.ADMIN];
+        // Kiểm tra quyền truy cập - L1, L2, Admin và Giám sát được xem đăng ký
+        const allowedRoles = [UserRole.L1, UserRole.L2, UserRole.SUPERVISOR, UserRole.ADMIN];
         const hasPermission = Array.isArray(currentUser.role)
             ? currentUser.role.some(role => allowedRoles.includes(role))
             : allowedRoles.includes(currentUser.role);
@@ -70,6 +70,19 @@ export async function GET(request: NextRequest) {
             query.unit_id = unitId;
         }
 
+        // Đối với L2 user, chỉ cho phép xem applications của unit mình
+        if (currentUser.role === UserRole.L2 ||
+            (Array.isArray(currentUser.role) && currentUser.role.includes(UserRole.L2))) {
+            if (currentUser.unit_id) {
+                query.unit_id = currentUser.unit_id;
+            } else {
+                return NextResponse.json(
+                    { success: false, message: 'Tài khoản L2 chưa được gán đơn vị' },
+                    { status: 403 }
+                );
+            }
+        }
+
         // Lấy tất cả đơn đăng ký với thông tin liên quan
         const applications = await InternshipApplication.find(query)
             .populate('student_id', 'username email full_name')
@@ -79,9 +92,31 @@ export async function GET(request: NextRequest) {
             .populate('created_by_staff', 'username full_name role')
             .sort({ created_at: -1 });
 
+        // Add student_code from StudentProfile for each application
+        const StudentProfile = (await import('../../../models/StudentProfile')).default;
+        const applicationsWithStudentCode = await Promise.all(
+            applications.map(async (app) => {
+                const appObj = app.toObject();
+                if (appObj.student_id && appObj.student_id._id) {
+                    const studentProfile = await StudentProfile.findOne({ user_id: appObj.student_id._id }).select('student_code full_name class_name phone');
+                    if (studentProfile) {
+                        appObj.student_id.student_code = studentProfile.student_code;
+                        appObj.student_id.full_name = studentProfile.full_name;
+                        appObj.student_id.class_name = studentProfile.class_name;
+                        appObj.student_id.phone = studentProfile.phone;
+                    } else {
+                        // Fallback to username if no student profile found
+                        appObj.student_id.student_code = appObj.student_id.username;
+                        appObj.student_id.full_name = appObj.student_id.full_name;
+                    }
+                }
+                return appObj;
+            })
+        );
+
         return NextResponse.json({
             success: true,
-            data: applications
+            data: applicationsWithStudentCode
         });
 
     } catch (error: any) {

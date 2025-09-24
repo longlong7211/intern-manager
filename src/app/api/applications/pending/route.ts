@@ -84,9 +84,23 @@ export async function GET(request: NextRequest) {
         }
 
         // Lấy danh sách đơn chờ duyệt
-        const applications = await InternshipApplication.find({
+        const query: any = {
             status: { $in: statusFilter }
-        })
+        };
+
+        // Đối với L2 user, chỉ cho phép xem applications của unit mình
+        if (hasRole(currentUser.role, UserRole.L2) && !hasRole(currentUser.role, UserRole.ADMIN)) {
+            if (currentUser.unit_id) {
+                query.unit_id = currentUser.unit_id;
+            } else {
+                return NextResponse.json(
+                    { success: false, message: 'Tài khoản L2 chưa được gán đơn vị' },
+                    { status: 403 }
+                );
+            }
+        }
+
+        const applications = await InternshipApplication.find(query)
             .populate('student_id', 'full_name email')
             .populate('unit_id', 'name')
             .sort({ created_at: -1 });

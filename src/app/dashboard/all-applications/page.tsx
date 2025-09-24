@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
+import ProtectedRoute from '@/components/ProtectedRoute';
 import AllApplications from '@/components/AllApplications';
 import { UserRole } from '@/types';
 import { hasAnyRole } from '@/lib/auth';
@@ -88,8 +89,10 @@ export default function DashboardAllApplicationsPage() {
     }
 
     return (
-        <DashboardLayout selectedKey="all-applications">
-            <AllApplications />
-        </DashboardLayout>
+        <ProtectedRoute>
+            <DashboardLayout selectedKey="all-applications">
+                <AllApplications />
+            </DashboardLayout>
+        </ProtectedRoute>
     );
 }

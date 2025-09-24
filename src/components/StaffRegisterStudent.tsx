@@ -133,7 +133,14 @@ const StaffRegisterStudent: React.FC = () => {
     };
 
     // Kiểm tra quyền truy cập
-    if (!user || ![UserRole.L1, UserRole.L2, UserRole.SUPERVISOR, UserRole.ADMIN].includes(user.role)) {
+    const allowedRoles = [UserRole.L1, UserRole.L2, UserRole.SUPERVISOR, UserRole.ADMIN];
+    const hasPermission = user && (
+        Array.isArray(user.role)
+            ? user.role.some(role => allowedRoles.includes(role))
+            : allowedRoles.includes(user.role)
+    );
+
+    if (!hasPermission) {
         return (
             <Card>
                 <div style={{ textAlign: 'center', padding: '40px' }}>
@@ -281,13 +288,14 @@ const StaffRegisterStudent: React.FC = () => {
                                         placeholder="Chọn đơn vị thực tập"
                                         showSearch
                                         optionFilterProp="children"
+                                        optionLabelProp="label"
                                         filterOption={(input, option) =>
                                             option?.children?.toString().toLowerCase().includes(input.toLowerCase()) || false
                                         }
                                         loading={unitsLoading}
                                     >
                                         {units.map(unit => (
-                                            <Option key={unit._id} value={unit._id}>
+                                            <Option key={unit._id} value={unit._id} label={unit.name}>
                                                 <div>
                                                     <div style={{ fontWeight: 'bold' }}>{unit.name}</div>
                                                     <div style={{ fontSize: '12px', color: '#666' }}>

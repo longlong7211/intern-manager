@@ -224,6 +224,11 @@ export async function POST(request: NextRequest) {
         // Create internship application
         const application = new InternshipApplication({
             student_id: user._id,
+            unit_id,
+            position_title,
+            description: description || '',
+            expected_start_date: startDate,
+            expected_total_hours: parseInt(expected_total_hours),
             status: applicationStatus,
             // Track who created this application
             created_by_staff: staffUser._id,

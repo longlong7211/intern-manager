@@ -231,13 +231,14 @@ const InternshipApplication: React.FC = () => {
                                         placeholder="Chọn đơn vị thực tập"
                                         showSearch
                                         optionFilterProp="children"
+                                        optionLabelProp="label"
                                         filterOption={(input, option) =>
                                             option?.children?.toString().toLowerCase().includes(input.toLowerCase()) || false
                                         }
                                         loading={unitsLoading}
                                     >
                                         {units.map(unit => (
-                                            <Option key={unit._id} value={unit._id}>
+                                            <Option key={unit._id} value={unit._id} label={unit.name}>
                                                 <div>
                                                     <div style={{ fontWeight: 'bold' }}>{unit.name}</div>
                                                     <div style={{ fontSize: '12px', color: '#666' }}>

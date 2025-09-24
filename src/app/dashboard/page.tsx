@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Card, Tabs, Row, Col, Statistic } from 'antd';
 import { UserOutlined, TeamOutlined, FileTextOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import DashboardLayout from '../../components/DashboardLayout';
+import ProtectedRoute from '../../components/ProtectedRoute';
 import StudentList from '../../components/StudentList';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserRole } from '../../types';
@@ -98,4 +99,12 @@ const Dashboard: React.FC = () => {
     );
 };
 
-export default Dashboard;
+const ProtectedDashboard: React.FC = () => {
+    return (
+        <ProtectedRoute>
+            <Dashboard />
+        </ProtectedRoute>
+    );
+};
+
+export default ProtectedDashboard;

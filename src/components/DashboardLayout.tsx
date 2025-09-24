@@ -95,6 +95,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, selectedKey
             case 'my-unit':
                 router.push('/dashboard/my-unit');
                 break;
+            case 'unit-applications':
+                router.push('/dashboard/unit-applications');
+                break;
             case 'reports':
                 router.push('/dashboard/reports');
                 break;
@@ -113,7 +116,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, selectedKey
     };
 
     const getMenuItems = () => {
-        const baseItems = [
+        if (!user?.role) return [
             {
                 key: 'dashboard',
                 icon: <DashboardOutlined />,
@@ -121,192 +124,150 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, selectedKey
             }
         ];
 
-        if (!user?.role) return baseItems;
+        // Define all possible menu items with their required permissions
+        const allMenuItems = [
+            {
+                key: 'dashboard',
+                icon: <DashboardOutlined />,
+                label: 'Dashboard',
+                roles: [UserRole.STUDENT, UserRole.L1, UserRole.L2, UserRole.SUPERVISOR, UserRole.ADMIN]
+            },
+            // Student specific menus
+            {
+                key: 'profile',
+                icon: <UserOutlined />,
+                label: 'Hồ sơ cá nhân',
+                roles: [UserRole.STUDENT]
+            },
+            {
+                key: 'applications',
+                icon: <FormOutlined />,
+                label: 'Đơn đăng ký thực tập',
+                roles: [UserRole.STUDENT]
+            },
+            {
+                key: 'internship',
+                icon: <ClockCircleOutlined />,
+                label: 'Thực tập hiện tại',
+                roles: [UserRole.STUDENT]
+            },
+            {
+                key: 'hours',
+                icon: <ClockCircleOutlined />,
+                label: 'Bảng giờ thực tập',
+                roles: [UserRole.STUDENT]
+            },
+            // L1 specific menus
+            {
+                key: 'pending-reviews',
+                icon: <FileTextOutlined />,
+                label: 'Duyệt đơn sơ bộ',
+                roles: [UserRole.L1]
+            },
+            // Shared menus for multiple roles
+            {
+                key: 'staff-register',
+                icon: <FormOutlined />,
+                label: 'Đăng ký cho sinh viên',
+                roles: [UserRole.L1, UserRole.L2, UserRole.SUPERVISOR, UserRole.ADMIN]
+            },
+            {
+                key: 'all-applications',
+                icon: <FormOutlined />,
+                label: 'Tất cả đơn đăng ký',
+                roles: [UserRole.L1, UserRole.SUPERVISOR, UserRole.ADMIN]
+            },
+            {
+                key: 'students',
+                icon: <TeamOutlined />,
+                label: 'Danh sách sinh viên',
+                roles: [UserRole.L1]
+            },
+            {
+                key: 'units',
+                icon: <ApartmentOutlined />,
+                label: 'Đơn vị thực tập',
+                roles: [UserRole.L1, UserRole.ADMIN]
+            },
+            {
+                key: 'reports',
+                icon: <FileTextOutlined />,
+                label: 'Báo cáo',
+                roles: [UserRole.L1]
+            },
+            // L2 specific menus
+            {
+                key: 'unit-applications',
+                icon: <FormOutlined />,
+                label: 'Duyệt thực tập đơn vị',
+                roles: [UserRole.L2]
+            },
+            {
+                key: 'my-unit',
+                icon: <ApartmentOutlined />,
+                label: 'Đơn vị của tôi',
+                roles: [UserRole.L2]
+            },
+            {
+                key: 'unit-students',
+                icon: <TeamOutlined />,
+                label: 'SV thực tập tại đơn vị',
+                roles: [UserRole.L2]
+            },
+            {
+                key: 'unit-hours',
+                icon: <ClockCircleOutlined />,
+                label: 'Quản lý giờ đơn vị',
+                roles: [UserRole.L2]
+            },
+            {
+                key: 'termination-requests',
+                icon: <FileTextOutlined />,
+                label: 'Yêu cầu chấm dứt',
+                roles: [UserRole.L2]
+            },
+            // SUPERVISOR specific menus
+            {
+                key: 'overview',
+                icon: <FileTextOutlined />,
+                label: 'Tổng quan hệ thống',
+                roles: [UserRole.SUPERVISOR]
+            },
+            {
+                key: 'all-data',
+                icon: <TeamOutlined />,
+                label: 'Toàn bộ dữ liệu',
+                roles: [UserRole.SUPERVISOR]
+            },
+            // Admin/Management menus
+            {
+                key: 'user-management',
+                icon: <TeamOutlined />,
+                label: 'Quản lý người dùng',
+                roles: [UserRole.L1, UserRole.ADMIN]
+            },
+            {
+                key: 'system-config',
+                icon: <SettingOutlined />,
+                label: 'Cấu hình hệ thống',
+                roles: [UserRole.L1, UserRole.ADMIN]
+            },
+            {
+                key: 'audit-logs',
+                icon: <FileTextOutlined />,
+                label: 'Nhật ký hệ thống',
+                roles: [UserRole.L1, UserRole.SUPERVISOR, UserRole.ADMIN]
+            }
+        ];
 
-        const menuItems = [...baseItems];
+        // Filter menu items based on user's roles
+        const userRoles = Array.isArray(user.role) ? user.role : [user.role];
+        const accessibleMenuItems = allMenuItems.filter(item =>
+            item.roles.some(role => userRoles.includes(role))
+        );
 
-        // Student specific menus
-        if (hasRole(user.role, UserRole.STUDENT)) {
-            menuItems.push(
-                {
-                    key: 'profile',
-                    icon: <UserOutlined />,
-                    label: 'Hồ sơ cá nhân',
-                },
-                {
-                    key: 'applications',
-                    icon: <FormOutlined />,
-                    label: 'Đơn đăng ký thực tập',
-                },
-                {
-                    key: 'internship',
-                    icon: <ClockCircleOutlined />,
-                    label: 'Thực tập hiện tại',
-                },
-                {
-                    key: 'hours',
-                    icon: <ClockCircleOutlined />,
-                    label: 'Bảng giờ thực tập',
-                }
-            );
-        }
-
-        // L1 specific menus
-        if (hasRole(user.role, UserRole.L1)) {
-            menuItems.push(
-                {
-                    key: 'pending-reviews',
-                    icon: <FileTextOutlined />,
-                    label: 'Duyệt đơn sơ bộ',
-                },
-                {
-                    key: 'staff-register',
-                    icon: <FormOutlined />,
-                    label: 'Đăng ký cho sinh viên',
-                },
-                {
-                    key: 'all-applications',
-                    icon: <FormOutlined />,
-                    label: 'Tất cả đơn đăng ký',
-                },
-                {
-                    key: 'students',
-                    icon: <TeamOutlined />,
-                    label: 'Danh sách sinh viên',
-                },
-                {
-                    key: 'units',
-                    icon: <ApartmentOutlined />,
-                    label: 'Đơn vị thực tập',
-                },
-                {
-                    key: 'reports',
-                    icon: <FileTextOutlined />,
-                    label: 'Báo cáo',
-                },
-                // Admin privileges for L1
-                {
-                    key: 'user-management',
-                    icon: <TeamOutlined />,
-                    label: 'Quản lý người dùng',
-                },
-                {
-                    key: 'system-config',
-                    icon: <SettingOutlined />,
-                    label: 'Cấu hình hệ thống',
-                },
-                {
-                    key: 'audit-logs',
-                    icon: <FileTextOutlined />,
-                    label: 'Nhật ký hệ thống',
-                }
-            );
-        }
-
-        // L2 specific menus  
-        if (hasRole(user.role, UserRole.L2)) {
-            menuItems.push(
-                {
-                    key: 'unit-applications',
-                    icon: <FormOutlined />,
-                    label: 'Chấp nhận thực tập',
-                },
-                {
-                    key: 'staff-register',
-                    icon: <FormOutlined />,
-                    label: 'Đăng ký cho sinh viên',
-                },
-                {
-                    key: 'my-unit',
-                    icon: <ApartmentOutlined />,
-                    label: 'Đơn vị của tôi',
-                },
-                {
-                    key: 'unit-students',
-                    icon: <TeamOutlined />,
-                    label: 'SV thực tập tại đơn vị',
-                },
-                {
-                    key: 'unit-hours',
-                    icon: <ClockCircleOutlined />,
-                    label: 'Quản lý giờ đơn vị',
-                },
-                {
-                    key: 'termination-requests',
-                    icon: <FileTextOutlined />,
-                    label: 'Yêu cầu chấm dứt',
-                }
-            );
-        }
-
-        // SUPERVISOR specific menus
-        if (hasRole(user.role, UserRole.SUPERVISOR)) {
-            menuItems.push(
-                {
-                    key: 'overview',
-                    icon: <FileTextOutlined />,
-                    label: 'Tổng quan hệ thống',
-                },
-                {
-                    key: 'staff-register',
-                    icon: <FormOutlined />,
-                    label: 'Đăng ký cho sinh viên',
-                },
-                {
-                    key: 'all-applications',
-                    icon: <FormOutlined />,
-                    label: 'Tất cả đơn đăng ký',
-                },
-                {
-                    key: 'all-data',
-                    icon: <TeamOutlined />,
-                    label: 'Toàn bộ dữ liệu',
-                },
-                {
-                    key: 'audit-logs',
-                    icon: <FileTextOutlined />,
-                    label: 'Nhật ký hệ thống',
-                }
-            );
-        }
-
-        // ADMIN specific menus
-        if (hasRole(user.role, UserRole.ADMIN)) {
-            menuItems.push(
-                {
-                    key: 'user-management',
-                    icon: <TeamOutlined />,
-                    label: 'Quản lý người dùng',
-                },
-                {
-                    key: 'staff-register',
-                    icon: <FormOutlined />,
-                    label: 'Đăng ký cho sinh viên',
-                },
-                {
-                    key: 'all-applications',
-                    icon: <FormOutlined />,
-                    label: 'Tất cả đơn đăng ký',
-                },
-                {
-                    key: 'units',
-                    icon: <ApartmentOutlined />,
-                    label: 'Đơn vị thực tập',
-                },
-                {
-                    key: 'system-config',
-                    icon: <SettingOutlined />,
-                    label: 'Cấu hình hệ thống',
-                },
-                {
-                    key: 'audit-logs',
-                    icon: <FileTextOutlined />,
-                    label: 'Nhật ký hệ thống',
-                }
-            );
-        }
-
-        return menuItems;
+        // Convert to Ant Design menu format (remove roles property)
+        return accessibleMenuItems.map(({ roles, ...item }) => item);
     };
 
     const userMenuItems = [
